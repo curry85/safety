@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>成员A · 第1周前端组件预览</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#eef2f7;color:#203047;font:14px 'Microsoft YaHei',sans-serif;padding:30px}
+.wrap{max-width:1080px;margin:0 auto}
+h1{font-size:20px;margin-bottom:6px}
+p{color:#7d889a;font-size:12.5px;margin-bottom:22px;line-height:1.7}
+.cards{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.card{background:#fff;border:1px solid #e1e6ef;border-radius:16px;padding:26px;transition:.2s;text-decoration:none;color:inherit}
+.card:hover{border-color:#4658cf;box-shadow:0 8px 26px #4658cf18;transform:translateY(-2px)}
+.card .icon{width:48px;height:48px;border-radius:12px;background:#eef0ff;color:#4658cf;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:14px}
+.card h2{font-size:16px;margin-bottom:6px}
+.card .en{font-size:10px;letter-spacing:1.5px;color:#9aa6ba;margin-bottom:10px}
+.card p{font-size:12.5px;color:#56647b}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>成员A · 第1周前端组件预览</h1>
+  <p>数据由 backend/run_pipeline.py 产出并写入 component_data.js；两个组件均可双击离线打开。</p>
+  <div class="cards">
+    <a class="card" href="text_highlight_component.html">
+      <div class="icon">✎</div>
+      <h2>文本高亮渲染组件</h2>
+      <div class="en">TEXT HIGHLIGHT COMPONENT</div>
+      <p>按字符级偏移渲染三级高亮（重点 / 一般 / 辅助），附段落句子定位、维度与底库来源明细。</p>
+    </a>
+    <a class="card" href="radar_text_component.html">
+      <div class="icon">◎</div>
+      <h2>雷达图 · 文本维度组件</h2>
+      <div class="en">TEXT RADAR COMPONENT</div>
+      <p>四维度菱形雷达（行文习惯 / 故事剧情 / 人物设定 / 专属名词）+ 权重条与关键指标。</p>
+    </a>
+  </div>
+</div>
+</body>
+</html>

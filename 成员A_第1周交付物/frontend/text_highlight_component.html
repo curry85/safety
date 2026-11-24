@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>成员A · 文本高亮渲染组件</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#eef2f7;color:#203047;font:14px 'Microsoft YaHei',sans-serif;padding:30px}
+.wrap{max-width:1080px;margin:0 auto}
+/* 组件头 */
+.comp-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px}
+.comp-head h1{font-size:20px}
+.comp-head p{color:#7d889a;font-size:12.5px;margin-top:6px;line-height:1.7}
+.meta-pills{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.pill{background:#fff;border:1px solid #e1e6ef;border-radius:999px;padding:7px 14px;font-size:12px;color:#56647b}
+.pill b{color:#203047}
+/* 标签 */
+.tags{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 18px}
+.tg{font-size:12px;border-radius:5px;padding:4px 11px;border:1px solid}
+.tg.red{background:#fdecec;color:#c0392b;border-color:#f0b9b9}
+.tg.amber{background:#fef3e2;color:#c97a1e;border-color:#f3d9a8}
+.tg.green{background:#e8f6ef;color:#2c9063;border-color:#b8e6cd}
+/* 纸张 */
+.paper{background:#fff;border:1px solid #dde3ec;border-radius:10px;box-shadow:0 6px 24px #21385814;padding:40px 48px}
+.paper .caption{color:#9aa6ba;font-size:11.5px;margin-bottom:14px}
+.paper h2{font-size:24px;margin-bottom:22px}
+.row{display:grid;grid-template-columns:34px 1fr;gap:14px;margin:14px 0;line-height:2.1;font-size:14px;color:#33415c}
+.row .no{color:#9aa6ba;font-size:12.5px;padding-top:2px}
+/* 高亮三级色 */
+.hl{border-radius:4px;padding:1px 3px;position:relative}
+.hl.high{background:#fbdcdc}
+.hl.mid{background:#dcdcfb}
+.hl.low{background:#d8efe4}
+.badge{display:inline-block;font-size:10px;font-weight:700;border-radius:4px;padding:1px 6px;margin-right:6px;color:#fff;vertical-align:1px}
+.badge.high{background:#d94848}
+.badge.mid{background:#5366df}
+.badge.low{background:#2c9063}
+/* 图例 */
+.legend{display:flex;gap:22px;align-items:center;margin-top:16px;font-size:12px;color:#56647b;flex-wrap:wrap}
+.legend .item{display:flex;align-items:center;gap:7px}
+.sw{width:14px;height:14px;border-radius:4px;display:inline-block}
+.sw.high{background:#fbdcdc;border:1px solid #d94848}
+.sw.mid{background:#dcdcfb;border:1px solid #5366df}
+.sw.low{background:#d8efe4;border:1px solid #2c9063}
+.hint{margin-left:auto;color:#9aa6ba;font-size:11px}
+/* 底部统计 */
+.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:22px}
+.sc{background:#fff;border:1px solid #e1e6ef;border-radius:12px;padding:16px 18px}
+.sc .k{font-size:11.5px;color:#7d889a}
+.sc .v{font-size:22px;font-weight:700;margin-top:5px}
+.sc .d{font-size:11.5px;color:#7d889a;margin-top:4px;line-height:1.6}
+.detail{margin-top:18px;background:#fff;border:1px solid #e1e6ef;border-radius:12px;overflow:hidden}
+.detail .row2{display:grid;grid-template-columns:64px 110px 110px 1fr;border-top:1px solid #eef1f6;font-size:12.5px}
+.detail .row2:first-child{border-top:none;background:#f7f9fc;color:#7d889a;font-size:12px}
+.detail .row2>div{padding:11px 14px}
+.detail .row2:not(:first-child)>div{color:#33415c}
+.loc{color:#7d889a;font-size:11.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="comp-head">
+    <div>
+      <h1>文本高亮渲染组件</h1>
+      <p>成员A · 第1周产出 ｜ 数据来源：output/text_analysis.json（经 component_data.js 注入）<br>
+      高亮片段携带段落 / 句子下标与字符级偏移，可直接对接功能二研判工作台。</p>
+    </div>
+    <div class="meta-pills" id="metaPills"></div>
+  </div>
+
+  <div class="tags" id="tagBox"></div>
+
+  <div class="paper">
+    <div class="caption" id="caption"></div>
+    <h2 id="docTitle"></h2>
+    <div id="paraBox"></div>
+  </div>
+
+  <div class="legend">
+    <span class="item"><span class="sw high"></span>深红 = 重点关注</span>
+    <span class="item"><span class="sw mid"></span>中蓝 = 一般关注</span>
+    <span class="item"><span class="sw low"></span>浅绿 = 辅助观察</span>
+    <span class="hint">高亮程度代表技术相似程度，不构成侵权认定</span>
+  </div>
+
+  <div class="summary" id="summaryBox"></div>
+
+  <div class="detail">
+    <div class="row2"><div>编号</div><div>维度</div><div>关注级别</div><div>片段与定位</div></div>
+    <div id="detailBox"></div>
+  </div>
+</div>
+
+<script src="component_data.js"></script>
+<script>
+const D = window.ANALYSIS_DATA;
+const $ = id => document.getElementById(id);
+
+function esc(s){return s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+/* 头部信息 */
+$('metaPills').innerHTML =
+  `<span class="pill">报告编号 <b>${esc(D.report_id)}</b></span>
+   <span class="pill">待测文件 <b>${esc(D.query_file)}</b></span>
+   <span class="pill">综合相似度 <b>${D.overall_similarity}</b></span>
+   <span class="pill">风险区间 <b>${esc(D.risk_band.name)}（${D.risk_band.range}）</b></span>`;
+
+/* 标签 */
+$('tagBox').innerHTML = D.labels.map(l =>
+  `<span class="tg ${l.level}" title="${esc(l.reason)}">${esc(l.name)}</span>`).join('');
+
+/* 段落全局偏移（与后端 "\n\n" 拼接口径一致） */
+const paras = D.paragraphs;
+const offsets = [];
+let cursor = 0;
+paras.forEach((p, i) => { offsets.push(cursor); cursor += p.length + 2; });
+
+const title = paras[0];
+const bodyParas = paras.slice(1);
+$('caption').textContent = `短篇故事 · 第 1 / 1 页 · 节选示例 ｜ 比对底库：${D.best_match.title}`;
+$('docTitle').textContent = title;
+
+/* 按段落渲染高亮 */
+function renderParagraph(text, paraIdx1) {
+  const hs = D.highlights.filter(h => h.location.paragraph_index === paraIdx1);
+  if (!hs.length) return esc(text);
+  const base = offsets[paraIdx1 - 1];
+  const slices = hs.map(h => ({
+    s: h.query_start - base, e: h.query_end - base, h
+  })).sort((a, b) => a.s - b.s);
+  let html = '', last = 0;
+  slices.forEach(sl => {
+    if (sl.s > last) html += esc(text.slice(last, sl.s));
+    const cls = sl.h.severity_code;
+    const badge = sl.h.highlight_id.replace('H', '');
+    html += `<span class="hl ${cls}"><span class="badge ${cls}">${badge}</span>${esc(text.slice(sl.s, sl.e))}</span>`;
+    last = sl.e;
+  });
+  if (last < text.length) html += esc(text.slice(last));
+  return html;
+}
+
+$('paraBox').innerHTML = bodyParas.map((p, i) => {
+  const paraIdx = i + 2;
+  return `<div class="row"><span class="no">${String(paraIdx - 1).padStart(2, '0')}</span><span>${renderParagraph(p, paraIdx)}</span></div>`;
+}).join('');
+
+/* 底部统计 */
+const sv = D.severity_summary;
+const dimCount = {};
+D.highlights.forEach(h => dimCount[h.dimension] = (dimCount[h.dimension] || 0) + 1);
+$('summaryBox').innerHTML = `
+  <div class="sc"><div class="k">标记总数</div><div class="v">${D.highlights.length}</div><div class="d">字符级偏移可追溯到底库原句</div></div>
+  <div class="sc"><div class="k">重点关注</div><div class="v" style="color:#d94848">${sv.high}</div><div class="d">深红标记，优先复核</div></div>
+  <div class="sc"><div class="k">一般关注 / 辅助观察</div><div class="v" style="color:#5366df">${sv.mid} / ${sv.low}</div><div class="d">中蓝与浅绿标记</div></div>
+  <div class="sc"><div class="k">维度分布</div><div class="v" style="font-size:15px">${Object.entries(dimCount).map(([k,v])=>`${k} ${v}`).join(' · ')}</div><div class="d">四维度命中次数</div></div>`;
+
+/* 明细表 */
+$('detailBox').innerHTML = D.highlights.map(h => `
+  <div class="row2">
+    <div>${h.highlight_id}</div>
+    <div>${esc(h.dimension)}</div>
+    <div>${esc(h.severity)}</div>
+    <div>${esc(h.text)}<div class="loc">定位：第 ${h.location.paragraph_index} 段 第 ${h.location.sentence_index} 句 ｜ 偏移 ${h.query_start}–${h.query_end} ｜ 来源：${esc(h.ref_source)}</div></div>
+  </div>`).join('');
+</script>
+</body>
+</html>

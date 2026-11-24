@@ -1,0 +1,45 @@
+{
+  "report_id": "AIGC-2026-W1-AUDIO-185623",
+  "generated_at": "2026-11-24T18:56:23",
+  "query": {
+    "file": "query_录音变体.wav",
+    "duration_sec": 2.857,
+    "hash_count": 16
+  },
+  "best_match": {
+    "item_id": "A001",
+    "file": "audio_01_海风云.wav",
+    "matched_hashes": 13,
+    "jaccard": 0.4545,
+    "match_ratio": 0.8125,
+    "audio_similarity": 70.5
+  },
+  "ranking": [
+    {
+      "item_id": "A001",
+      "file": "audio_01_海风云.wav",
+      "matched_hashes": 13,
+      "jaccard": 0.4545,
+      "match_ratio": 0.8125,
+      "audio_similarity": 70.5
+    },
+    {
+      "item_id": "A002",
+      "file": "audio_02_城市夜跑.wav",
+      "matched_hashes": 10,
+      "jaccard": 0.2308,
+      "match_ratio": 0.625,
+      "audio_similarity": 50.7
+    },
+    {
+      "item_id": "A003",
+      "file": "audio_03_改造手记.wav",
+      "matched_hashes": 9,
+      "jaccard": 0.1034,
+      "match_ratio": 0.5625,
+      "audio_similarity": 42.5
+    }
+  ],
+  "label": "疑似音频复用",
+  "note": "第1周产出指纹比对原型；声纹 / 原声台词维度在第2–3周细化。"
+}

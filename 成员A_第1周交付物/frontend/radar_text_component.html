@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>成员A · 雷达图文本维度组件</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#eef2f7;color:#203047;font:14px 'Microsoft YaHei',sans-serif;padding:30px}
+.wrap{max-width:1080px;margin:0 auto}
+.comp-head{margin-bottom:18px}
+.comp-head h1{font-size:20px}
+.comp-head p{color:#7d889a;font-size:12.5px;margin-top:6px;line-height:1.7}
+.tags{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 18px}
+.tg{font-size:12px;border-radius:5px;padding:4px 11px;border:1px solid}
+.tg.red{background:#fdecec;color:#c0392b;border-color:#f0b9b9}
+.tg.amber{background:#fef3e2;color:#c97a1e;border-color:#f3d9a8}
+.tg.green{background:#e8f6ef;color:#2c9063;border-color:#b8e6cd}
+.panel{background:#fff;border:1px solid #e1e6ef;border-radius:16px;padding:26px 30px;display:grid;grid-template-columns:440px 1fr;gap:30px;align-items:center}
+.radar-box{border:1px solid #e6ebf2;border-radius:12px;padding:10px}
+svg{display:block;margin:0 auto}
+/* 右侧权重条 */
+.bars{display:flex;flex-direction:column;gap:18px}
+.bar-row{display:grid;grid-template-columns:96px 70px 1fr;gap:12px;align-items:center}
+.bar-row .name{font-weight:700;font-size:14px}
+.bar-row .wt{color:#9aa6ba;font-size:12px}
+.track{display:block;height:10px;background:#eef1f6;border-radius:999px;overflow:hidden}
+.fill{display:block;height:100%;border-radius:999px}
+.fill.hi{background:#d94848}
+.fill.lo{background:#8a97d6}
+.bar-row .val{font-size:12px;color:#56647b;text-align:right}
+.total{border-top:1px dashed #d6dde9;padding-top:16px;display:grid;grid-template-columns:96px 70px 1fr;gap:12px;align-items:center}
+.total .name{font-weight:700}
+.total .wt{color:#9aa6ba;font-size:12px}
+.note{margin-top:18px;font-size:12px;color:#7d889a;line-height:1.8;background:#f7f9fc;border-radius:10px;padding:12px 14px}
+.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:18px}
+.mc{border:1px solid #e6ebf2;border-radius:10px;padding:13px 15px}
+.mc .k{font-size:11px;color:#7d889a}
+.mc .v{font-size:19px;font-weight:700;margin-top:4px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="comp-head">
+    <h1>雷达图 · 文本维度组件</h1>
+    <p>成员A · 第1周产出 ｜ 四个文本维度得分由后端 similarity.py 真实计算，权重与功能一口径一致（行文 35% / 剧情 30% / 人设 20% / 名词 15%）。</p>
+  </div>
+  <div class="tags" id="tagBox"></div>
+
+  <div class="panel">
+    <div class="radar-box">
+      <svg id="radar" width="420" height="420" viewBox="0 0 420 420"></svg>
+    </div>
+    <div>
+      <div class="bars" id="bars"></div>
+      <div class="metrics" id="metrics"></div>
+      <div class="note" id="note"></div>
+    </div>
+  </div>
+</div>
+
+<script src="component_data.js"></script>
+<script>
+const D = window.ANALYSIS_DATA;
+const $ = id => document.getElementById(id);
+function esc(s){return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+
+$('tagBox').innerHTML = D.labels.map(l =>
+  `<span class="tg ${l.level}" title="${esc(l.reason)}">${esc(l.name)}</span>`).join('');
+
+const dim = Object.fromEntries(D.dimensions.map(d => [d.key, d]));
+/* 雷达轴顺序：上=故事剧情 右=行文习惯 下=人物设定 左=专属名词 */
+const axes = [
+  {key:'plot',          angle:-90},
+  {key:'writing_style', angle:0},
+  {key:'character',     angle:90},
+  {key:'proper_noun',   angle:180},
+];
+
+const CX = 210, CY = 210, R = 122;
+const svg = $('radar');
+const NS = 'http://www.w3.org/2000/svg';
+function pt(angleDeg, r){
+  const a = angleDeg * Math.PI / 180;
+  return [CX + r * Math.cos(a), CY + r * Math.sin(a)];
+}
+function el(tag, attrs){
+  const e = document.createElementNS(NS, tag);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+}
+
+/* 网格菱形 */
+[0.25, 0.5, 0.75, 1].forEach(ratio => {
+  const pts = axes.map(a => pt(a.angle, R * ratio).join(',')).join(' ');
+  svg.appendChild(el('polygon', {points:pts, fill:'none', stroke:'#e2e8f1', 'stroke-width':1}));
+});
+/* 轴线 */
+axes.forEach(a => {
+  const [x, y] = pt(a.angle, R);
+  svg.appendChild(el('line', {x1:CX, y1:CY, x2:x, y2:y, stroke:'#e2e8f1', 'stroke-width':1}));
+});
+/* 数据多边形 */
+const polyPts = axes.map(a => {
+  const score = dim[a.key].score;
+  return pt(a.angle, R * score / 100).join(',');
+}).join(' ');
+svg.appendChild(el('polygon', {points:polyPts, fill:'rgba(217,72,72,0.16)', stroke:'#d94848', 'stroke-width':2}));
+/* 顶点 */
+axes.forEach(a => {
+  const score = dim[a.key].score;
+  const [x, y] = pt(a.angle, R * score / 100);
+  svg.appendChild(el('circle', {cx:x, cy:y, r:5, fill:'#fff', stroke:'#d94848', 'stroke-width':2}));
+});
+/* 轴标签 */
+axes.forEach(a => {
+  const d = dim[a.key];
+  const [x, y] = pt(a.angle, R + 28);
+  const t = el('text', {x:x, y:y, 'text-anchor':'middle', 'dominant-baseline':'middle', 'font-size':14, 'font-weight':700, fill:'#203047'});
+  t.textContent = `${d.name} ${d.score}%`;
+  svg.appendChild(t);
+});
+/* 中心综合分 */
+const center = el('text', {x:CX, y:CY-8, 'text-anchor':'middle', 'font-size':26, 'font-weight':700, fill:'#203047'});
+center.textContent = D.overall_similarity;
+svg.appendChild(center);
+const centerSub = el('text', {x:CX, y:CY+16, 'text-anchor':'middle', 'font-size':12, fill:'#7d889a'});
+centerSub.textContent = '综合相似度';
+svg.appendChild(centerSub);
+
+/* 右侧权重条（按 行文 / 剧情 / 人设 / 名词 顺序） */
+const barOrder = ['writing_style','plot','character','proper_noun'];
+$('bars').innerHTML = barOrder.map(k => {
+  const d = dim[k];
+  const cls = d.score >= 70 ? 'hi' : 'lo';
+  return `<div class="bar-row">
+    <span class="name">${esc(d.name)}</span>
+    <span class="wt">×${Math.round(d.weight*100)}%</span>
+    <span style="position:relative">
+      <span class="track"><span class="fill ${cls}" style="width:${d.score}%"></span></span>
+      <span class="val" style="position:absolute;right:0;top:-18px">${d.score}</span>
+    </span>
+  </div>`;
+}).join('') + `
+  <div class="total">
+    <span class="name">加权合计</span>
+    <span class="wt">100%</span>
+    <span class="track"><span class="fill hi" style="width:100%"></span></span>
+  </div>`;
+
+/* 关键指标 */
+$('metrics').innerHTML = `
+  <div class="mc"><div class="k">TF-IDF 余弦</div><div class="v">${(D.best_match.tfidf_cosine*100).toFixed(1)}%</div></div>
+  <div class="mc"><div class="k">二元组 Jaccard</div><div class="v">${(D.best_match.bigram_jaccard*100).toFixed(1)}%</div></div>
+  <div class="mc"><div class="k">命中底库</div><div class="v" style="font-size:13px">${esc(D.best_match.file)}</div></div>`;
+
+$('note').textContent = `主要命中：${D.best_match.title} ｜ 风险区间：${D.risk_band.name}（${D.risk_band.range}）。维度分为文本算法原型结果，第2周接入真实底库全量检索后刷新。`;
+</script>
+</body>
+</html>
